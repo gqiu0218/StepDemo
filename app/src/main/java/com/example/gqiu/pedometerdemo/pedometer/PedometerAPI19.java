@@ -82,7 +82,7 @@ class PedometerAPI19 extends IPedometer {
             if (event.values[0] == 1.0f) {
                 mDetector++;
                 if (mCallback != null) {
-                    mCallback.onSensorDetectorChange(mDetector);
+                    mCallback.onSensorDetectorChange(1);
                 }
             }
         } else if (Sensor.TYPE_STEP_COUNTER == type) {
