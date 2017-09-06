@@ -306,8 +306,6 @@ class PedometerAPILt19 extends IPedometer {
     public void onDateChange() {
         //今天过完了，日期发生变化，清零
         currentStep = 0;
-        mInitTodayStepNum = 0;
-        resetTodayTime();
     }
 
 }

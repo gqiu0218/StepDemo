@@ -34,7 +34,6 @@ class PedometerAPI19 extends IPedometer {
 
     private int mCounter;
     private int mDetector;
-    private int mTodayCounter;   //今天最初的步数值
     private int mLastAdd;        //上一次增加的值
     private boolean sensorReset; //传感器是否重置
 
@@ -55,7 +54,6 @@ class PedometerAPI19 extends IPedometer {
         super(context);
         init(context);
         this.mCallback = callback;
-
     }
 
     /**
@@ -67,7 +65,10 @@ class PedometerAPI19 extends IPedometer {
         mSensorMgr = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
         mSensorStepDetector = mSensorMgr.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         mSensorStepCounter = mSensorMgr.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
-        mLastAdd = mSpUtil.getInt(getNowCounterKey(), 0);
+        boolean result = mSpUtil.contains(getTodayNativeKey());
+        if (result) {
+            mLastAdd = mSpUtil.getInt(getNowCounterKey(), 0);
+        }
     }
 
     @Override
@@ -90,9 +91,8 @@ class PedometerAPI19 extends IPedometer {
             if (temp == 0 && sensorReset) {
                 //当重新初始值为0时认为是重新计算了
                 sensorReset = false;
-                mSpUtil.edit().remove(getTodayCounterKey()).apply();
-                mTodayCounter = 0;
                 mLastAdd = 0;
+                mCounter = -1;
             }
 
             //去重复
@@ -104,17 +104,14 @@ class PedometerAPI19 extends IPedometer {
                      * 因为这个感应器的计步是从开机计起来的，
 					 * 所以第一个步数＝第2次获取的步数-第1次获取的步数
 					 */
-                    mTodayCounter = mCounter;
-                    mSpUtil.edit().putInt(getTodayCounterKey(), mCounter).apply();
+                    mSpUtil.edit().putInt(getTodayNativeKey(), 0).apply();
                 } else if (mCallback != null) {
                     // 回调处理
-                    if (mLastAdd == 0) {
-                        mSpUtil.getInt(getNowCounterKey(), 0);
-                    }
                     int addStepNum = mCounter - mLastAdd;  //减去上次add值
                     if (addStepNum > 0)
                         mCallback.onSensorCounterChange(addStepNum);
                 }
+
                 mLastAdd = mCounter;
                 mSpUtil.edit().putInt(getNowCounterKey(), mCounter).apply();
             }
@@ -150,16 +147,12 @@ class PedometerAPI19 extends IPedometer {
         //今天过完了，日期发生变化，清零
         mCounter = 0;
         mDetector = 0;
-        mTodayCounter = 0;
-        resetTodayTime();
+        mLastAdd = 0;
+        mSpUtil.edit().putInt(getNowCounterKey(), 0).apply();
     }
 
 
     private boolean hasTodayNum() {
-        if (mTodayCounter == 0) {
-            mTodayCounter = mSpUtil.getInt(getTodayCounterKey(), 0);
-        }
-
-        return mTodayCounter != 0;
+        return mSpUtil.contains(getTodayNativeKey());
     }
 }

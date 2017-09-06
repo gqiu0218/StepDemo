@@ -4,17 +4,17 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.hardware.SensorEventListener;
 
+import java.util.TimeZone;
+
 /**
  * 计步功能的基类，主要用于统一不同api版本的规范
  */
-abstract class IPedometer implements SensorEventListener {
+public abstract class IPedometer implements SensorEventListener {
+    private static final int OFFSET = (1000 * 3600 * 24);
     protected SharedPreferences mSpUtil;
-    private static final String EVERY_COUNTER_KEY = "CounterKey";
     private static final String EVERY_NOW_COUNTER_KEY = "NowCounterKey";
-    private static final String EVERY_NATIVE_KEY = "NativeKey";
+    public static final String EVERY_NATIVE_KEY = "NativeKey";
     public static final int MAX_STEP = 100000;          //每天最大值
-    private long mTodayKey;
-    int mInitTodayStepNum;
 
 
     public IPedometer(Context context) {
@@ -39,15 +39,14 @@ abstract class IPedometer implements SensorEventListener {
     public abstract void onDateChange();
 
 
-    String getTodayCounterKey() {
-        return EVERY_COUNTER_KEY + "_" + getTodayTime();
-    }
-
+    //今天的步数(使用的步数)
     String getTodayNativeKey() {
         return EVERY_NATIVE_KEY + "_" + getTodayTime();
     }
 
-    String getNowCounterKey() {return EVERY_NOW_COUNTER_KEY;}
+    String getNowCounterKey() {
+        return EVERY_NOW_COUNTER_KEY;
+    }
 
     /**
      * 查看是否有今天的数据，如果有下次计步，否则将些次步数放入map
@@ -61,25 +60,13 @@ abstract class IPedometer implements SensorEventListener {
         mSpUtil.edit().putInt(getTodayNativeKey(), realStepNum).apply();
     }
 
+    int getTodayStepNum() {
+        return mSpUtil.getInt(getTodayNativeKey(), 0);
+    }
+
 
     long getTodayTime() {
-        if (mTodayKey == 0) {
-            mTodayKey = TimeUtils.getTodayTime();
-        }
-        return mTodayKey;
+        long current = System.currentTimeMillis();
+        return current / OFFSET * OFFSET - TimeZone.getDefault().getRawOffset();
     }
-
-
-    int initTodayStepNum() {
-        if (mInitTodayStepNum == 0) {
-            mInitTodayStepNum = mSpUtil.getInt(getTodayNativeKey(), 0);
-        }
-        return mInitTodayStepNum;
-    }
-
-    void resetTodayTime() {
-        mTodayKey = 0;
-        mInitTodayStepNum = 0;
-    }
-
 }

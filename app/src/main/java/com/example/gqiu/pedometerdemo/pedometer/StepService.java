@@ -12,6 +12,7 @@ import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 import android.util.Log;
 
 
@@ -45,7 +46,7 @@ public class StepService extends Service implements IPedometerCallback {
         if (mPedometer == null) {
             Log.e("gqiu", "设备不支持记步功能");
         } else {
-            stepCounter = mPedometer.initTodayStepNum();
+            stepCounter = mPedometer.getTodayStepNum();
             registerBroadcast();
             mPedometer.registerSensor();
             sendStep(stepCounter);
@@ -94,7 +95,7 @@ public class StepService extends Service implements IPedometerCallback {
     public void onSensorCounterChange(int addStepNum) {
         Log.e("gqiu", "Counter step num:" + addStepNum);
         if (stepCounter == 0) {
-            stepCounter = mPedometer.initTodayStepNum();
+            stepCounter = mPedometer.getTodayStepNum();
         }
 
         if ((stepCounter + addStepNum) < IPedometer.MAX_STEP) {
@@ -108,7 +109,7 @@ public class StepService extends Service implements IPedometerCallback {
     @Override
     public void onSensorDetectorChange(int addStepNum) {
         if (stepCounter == 0) {
-            stepCounter = mPedometer.initTodayStepNum();
+            stepCounter = mPedometer.getTodayStepNum();
         }
 
         if ((stepCounter + addStepNum) < IPedometer.MAX_STEP) {
@@ -143,7 +144,9 @@ public class StepService extends Service implements IPedometerCallback {
 
 
     private void registerBroadcast() {
-        IntentFilter filter = new IntentFilter(Intent.ACTION_DATE_CHANGED);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_DATE_CHANGED);
+        filter.addAction(StepReceiver.ACTION_INIT_STEP);
         mReceiver = new DateChangedReceiver();
         registerReceiver(mReceiver, filter);
     }
@@ -152,10 +155,23 @@ public class StepService extends Service implements IPedometerCallback {
     private class DateChangedReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (mPedometer != null) {
-                mPedometer.onDateChange();
-                stepCounter = 0;
+            String action = intent.getAction();
+            if (TextUtils.isEmpty(action)) {
+                return;
             }
+
+            switch (action) {
+                case Intent.ACTION_DATE_CHANGED:
+                    if (mPedometer != null) {
+                        mPedometer.onDateChange();
+                        stepCounter = 0;
+                    }
+                    break;
+                case StepReceiver.ACTION_INIT_STEP:
+                    stepCounter = 0;
+                    break;
+            }
+
         }
     }
 }

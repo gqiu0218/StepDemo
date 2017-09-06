@@ -40,4 +40,10 @@ public class StepHelper {
         ctx.sendBroadcast(intent);
     }
 
+
+    public static void sendInitStepReceiver(Context ctx) {
+        Intent intent = new Intent(StepReceiver.ACTION_INIT_STEP);
+        ctx.sendBroadcast(intent);
+    }
+
 }
