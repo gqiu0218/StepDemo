@@ -13,10 +13,11 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
-import android.util.Log;
 
 
 import com.example.gqiu.pedometerdemo.R;
+
+import timber.log.Timber;
 
 
 /**
@@ -37,14 +38,14 @@ public class StepService extends Service implements IPedometerCallback {
     private NotificationManager mNotificationMgr;
 
     private DateChangedReceiver mReceiver;
-
+    private NotificationCompat.Builder mBuilder;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         mPedometer = PedometerFactory.get(getApplicationContext(), this);
 
         if (mPedometer == null) {
-            Log.e("gqiu", "设备不支持记步功能");
+            Timber.e("设备不支持记步功能");
         } else {
             stepCounter = mPedometer.getTodayStepNum();
             registerBroadcast();
@@ -71,35 +72,43 @@ public class StepService extends Service implements IPedometerCallback {
         if (mNotificationMgr == null) {
             mNotificationMgr = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         }
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
-        Intent intent = new Intent("cn.jpush.android.intent.NOTIFICATION_OPENED");
-        // JPushReceiver 会检查 Bundle 对象，这里给它传一个空的 bundle，以防止 JPushReceiver 爆出空指针异常
-        intent.putExtra(null, new Bundle());
-        PendingIntent contentIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
-        builder.setContentIntent(contentIntent);
-        builder.setSmallIcon(R.mipmap.ic_launcher);
-        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
-        builder.setTicker(getString(R.string.app_name));
-        builder.setContentTitle(getString(R.string.app_name));
-        //设置不可清除
-        builder.setOngoing(true);
-        builder.setContentText(content);
-        Notification notification = builder.build();
 
-        startForeground(0, notification);
+        Notification notification;
+        if (mBuilder == null) {
+            mBuilder = new NotificationCompat.Builder(this);
+            Intent intent = new Intent("cn.jpush.android.intent.NOTIFICATION_OPENED");
+            // JPushReceiver 会检查 Bundle 对象，这里给它传一个空的 bundle，以防止 JPushReceiver 爆出空指针异常
+            intent.putExtra(null, new Bundle());
+            PendingIntent contentIntent = PendingIntent.getBroadcast(this, 0, intent, 0);
+            mBuilder.setContentIntent(contentIntent);
+            mBuilder.setSmallIcon(R.mipmap.ic_launcher);
+            mBuilder.setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher));
+            mBuilder.setTicker(getString(R.string.app_name));
+            mBuilder.setContentTitle(getString(R.string.app_name));
+
+            //设置不可清除
+            mBuilder.setOngoing(true);
+            mBuilder.setContentText(content);
+            notification = mBuilder.build();
+            startForeground(0, notification);
+        } else {
+            mBuilder.setContentText(content);
+            notification = mBuilder.build();
+        }
+
         mNotificationMgr.notify(R.string.app_name, notification);
     }
 
 
     @Override
     public void onSensorCounterChange(int addStepNum) {
-        Log.e("gqiu", "Counter step num:" + addStepNum);
         if (stepCounter == 0) {
             stepCounter = mPedometer.getTodayStepNum();
         }
 
         if ((stepCounter + addStepNum) < IPedometer.MAX_STEP) {
             stepCounter += addStepNum;
+            Timber.e("add step num:" + addStepNum + ",total step num:" + stepCounter);
             //更新ui
             sendStep(stepCounter);
             mPedometer.save(stepCounter);
@@ -115,14 +124,25 @@ public class StepService extends Service implements IPedometerCallback {
         if ((stepCounter + addStepNum) < IPedometer.MAX_STEP) {
             stepCounter += addStepNum;
             sendStep(stepCounter);
-            Log.e("gqiu", "Detector step num:" + stepCounter);
+            Timber.e("add step num:" + addStepNum + ",total step num:" + stepCounter);
             mPedometer.save(stepCounter);
         }
+    }
+
+    @Override
+    public void onDateChange() {
+        stepCounter = 0;
     }
 
 
     @Override
     public void onDestroy() {
+        Timber.e("service is killed...");
+
+
+        if (mNotificationMgr != null) {
+            mNotificationMgr.cancelAll();
+        }
         //取消前台进程
         stopForeground(true);
         //取消感应器
@@ -146,7 +166,6 @@ public class StepService extends Service implements IPedometerCallback {
     private void registerBroadcast() {
         IntentFilter filter = new IntentFilter();
         filter.addAction(Intent.ACTION_DATE_CHANGED);
-        filter.addAction(StepReceiver.ACTION_INIT_STEP);
         mReceiver = new DateChangedReceiver();
         registerReceiver(mReceiver, filter);
     }
@@ -166,9 +185,6 @@ public class StepService extends Service implements IPedometerCallback {
                         mPedometer.onDateChange();
                         stepCounter = 0;
                     }
-                    break;
-                case StepReceiver.ACTION_INIT_STEP:
-                    stepCounter = 0;
                     break;
             }
 

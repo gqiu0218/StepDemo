@@ -39,11 +39,4 @@ public class StepHelper {
         intent.putExtra(StepReceiver.STEP_KEY, stepNum);
         ctx.sendBroadcast(intent);
     }
-
-
-    public static void sendInitStepReceiver(Context ctx) {
-        Intent intent = new Intent(StepReceiver.ACTION_INIT_STEP);
-        ctx.sendBroadcast(intent);
-    }
-
 }

@@ -8,12 +8,15 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.util.Log;
 
+import timber.log.Timber;
+
 
 /**
  * 针对android4.4 版本进行的计步器功能
  */
 @TargetApi(Build.VERSION_CODES.KITKAT)
 class PedometerAPI19 extends IPedometer {
+
 
     /**
      * 传感器批处理时间，最长 10 秒从传感器返回一次数据
@@ -52,8 +55,8 @@ class PedometerAPI19 extends IPedometer {
      */
     PedometerAPI19(Context context, IPedometerCallback callback) {
         super(context);
-        init(context);
         this.mCallback = callback;
+        init(context);
     }
 
     /**
@@ -98,15 +101,18 @@ class PedometerAPI19 extends IPedometer {
             //去重复
             if (mCounter != temp) {
                 mCounter = temp;
-                Log.e("gqiu", "mCounter=" + mCounter);
                 if (!hasTodayNum()) {
                     /*是否为第一次获取到步数，
                      * 因为这个感应器的计步是从开机计起来的，
 					 * 所以第一个步数＝第2次获取的步数-第1次获取的步数
 					 */
+                    Timber.e("=============================初始化新的一天===================================");
+                    Timber.e("counter=" + mCounter);
+                    mCallback.onDateChange();
                     mSpUtil.edit().putInt(getTodayNativeKey(), 0).apply();
                 } else if (mCallback != null) {
                     // 回调处理
+                    Timber.e("counter=" + mCounter + ",last=" + mLastAdd);
                     int addStepNum = mCounter - mLastAdd;  //减去上次add值
                     if (addStepNum > 0)
                         mCallback.onSensorCounterChange(addStepNum);
@@ -122,7 +128,7 @@ class PedometerAPI19 extends IPedometer {
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
         //每当传感器精确度发生变化的时候，清空记录今日步数的map,因为当精度发生变化的时候，可能导致步数减少
-        Log.e("gqiu", "The step sensor has change accuracy!\n");
+        Timber.e("\nThe step sensor has change accuracy!");
         sensorReset = true;
     }
 
@@ -143,12 +149,23 @@ class PedometerAPI19 extends IPedometer {
 
     @Override
     public void onDateChange() {
-        Log.e("gqiu", "onDateChange:new day coming！");
+        Timber.e("onDateChange:new day coming！");
+        mCallback.onDateChange();
         //今天过完了，日期发生变化，清零
-        mCounter = 0;
-        mDetector = 0;
-        mLastAdd = 0;
-        mSpUtil.edit().putInt(getNowCounterKey(), 0).apply();
+//        mCounter = 0;
+//        mDetector = 0;
+//
+//
+//        Calendar calendar = Calendar.getInstance();
+//        int hour = calendar.get(Calendar.HOUR_OF_DAY);
+//        int minute = calendar.get(Calendar.MINUTE);
+//        int second = calendar.get(Calendar.SECOND);
+//        int mills = calendar.get(Calendar.MILLISECOND);
+//
+//        if (hour == 0 && minute == 0 && second == 0 && mills == 0) {
+//            mLastAdd = 0;
+//            mSpUtil.edit().putInt(getNowCounterKey(), 0).apply();
+//        }
     }
 
 

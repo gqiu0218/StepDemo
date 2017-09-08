@@ -15,7 +15,7 @@ public abstract class IPedometer implements SensorEventListener {
     private static final String EVERY_NOW_COUNTER_KEY = "NowCounterKey";
     public static final String EVERY_NATIVE_KEY = "NativeKey";
     public static final int MAX_STEP = 100000;          //每天最大值
-
+    private long mLastTime;
 
     public IPedometer(Context context) {
         mSpUtil = context.getSharedPreferences("step", Context.MODE_PRIVATE);
@@ -48,13 +48,6 @@ public abstract class IPedometer implements SensorEventListener {
         return EVERY_NOW_COUNTER_KEY;
     }
 
-    /**
-     * 查看是否有今天的数据，如果有下次计步，否则将些次步数放入map
-     * 如果map中虽然有记录，但是没有今天的第一步，则清除。然后记录今天的第一步
-     *
-     * @return true表示没有今天第一步的值，需要设置
-     */
-
 
     void save(int realStepNum) {
         mSpUtil.edit().putInt(getTodayNativeKey(), realStepNum).apply();
@@ -65,8 +58,15 @@ public abstract class IPedometer implements SensorEventListener {
     }
 
 
-    long getTodayTime() {
+    private long getTodayTime() {
         long current = System.currentTimeMillis();
-        return current / OFFSET * OFFSET - TimeZone.getDefault().getRawOffset();
+        long result = current / OFFSET * OFFSET - TimeZone.getDefault().getRawOffset();
+
+        if (result != mLastTime) {
+            onDateChange();
+        }
+
+        mLastTime = result;
+        return result;
     }
 }

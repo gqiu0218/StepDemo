@@ -81,8 +81,8 @@ class PedometerAPILt19 extends IPedometer {
 
     PedometerAPILt19(Context context, IPedometerCallback callback) {
         super(context);
-        init(context);
         this.mCallback = callback;
+        init(context);
     }
 
     /**
@@ -125,6 +125,7 @@ class PedometerAPILt19 extends IPedometer {
             currentStep++;
             if (mCallback != null) {
                 // 回调处理
+                mSpUtil.contains(getTodayNativeKey());
                 mCallback.onSensorDetectorChange(1);
             }
         }
@@ -306,6 +307,7 @@ class PedometerAPILt19 extends IPedometer {
     public void onDateChange() {
         //今天过完了，日期发生变化，清零
         currentStep = 0;
+        mCallback.onDateChange();
     }
 
 }

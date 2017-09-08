@@ -13,4 +13,6 @@ public interface IPedometerCallback {
     void onSensorCounterChange(int stepNum);
 
     void onSensorDetectorChange(int addStepNum);
+
+    void onDateChange();
 }

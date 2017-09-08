@@ -7,8 +7,7 @@ import android.content.IntentFilter;
 
 public class StepReceiver extends BroadcastReceiver {
     public static final String STEP_KEY = "step";
-    public static final String ACTION_UPDATE_STEP = "ACTION_UPDATE_STEP";
-    public static final String ACTION_INIT_STEP = "ACTION_INIT_STEP";
+    public static final String ACTION_UPDATE_STEP = "ACTION_UPDATE_STEP_DEMO";
 
 
     /**

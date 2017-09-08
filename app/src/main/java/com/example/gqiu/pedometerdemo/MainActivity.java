@@ -45,20 +45,11 @@ public class MainActivity extends AppCompatActivity implements StepListener {
         SharedPreferences mSpUtil = getSharedPreferences("step", Context.MODE_PRIVATE);
         int stepNum = mSpUtil.getInt(IPedometer.EVERY_NATIVE_KEY + "_" + getTodayTime(), 0);
         textView.setText(String.valueOf(stepNum));
-        StepHelper.sendInitStepReceiver(this);
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-        Log.d("gqiu", "onPause");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        Log.d("gqiu", "onDestroy");
-        StepHelper.stopStep(this);
         mReceiver.unregister(this);
     }
 

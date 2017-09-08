@@ -1,6 +1,8 @@
 package com.example.gqiu.pedometerdemo.pedometer;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 
 /**
  * 时间工具类
@@ -8,7 +10,6 @@ import java.util.Calendar;
  */
 
 public class TimeUtils {
-
 
     public static long getTodayTime() {
         Calendar calendar = Calendar.getInstance();
