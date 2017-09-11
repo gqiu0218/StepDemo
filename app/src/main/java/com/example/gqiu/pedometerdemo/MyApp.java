@@ -35,7 +35,7 @@ public class MyApp extends Application {
 
         public CrashReportingTree(Context context) {
             this.context = context;
-            mFormat = new SimpleDateFormat("MM-dd HH:mm", Locale.CHINA);
+            mFormat = new SimpleDateFormat("MM-dd HH:mm:ss", Locale.CHINA);
         }
 
         @Override
@@ -47,7 +47,7 @@ public class MyApp extends Application {
             Date nowDate = new Date();
             String dateFormat = "[" + mFormat.format(nowDate) + "] ";
             message = dateFormat + message;
-
+            Log.e("gqiu", message);
 
             File storeFileDir = context.getExternalFilesDir(null);
             if (storeFileDir == null) {

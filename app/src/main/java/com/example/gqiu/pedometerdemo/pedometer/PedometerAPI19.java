@@ -114,10 +114,10 @@ class PedometerAPI19 extends IPedometer {
                     // 回调处理
                     Timber.e("counter=" + mCounter + ",last=" + mLastAdd);
                     int addStepNum = mCounter - mLastAdd;  //减去上次add值
+                    mLastAdd = mCounter;
                     if (addStepNum > 0)
                         mCallback.onSensorCounterChange(addStepNum);
                 }
-
                 mLastAdd = mCounter;
                 mSpUtil.edit().putInt(getNowCounterKey(), mCounter).apply();
             }

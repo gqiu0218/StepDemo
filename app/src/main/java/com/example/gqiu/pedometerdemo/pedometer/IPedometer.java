@@ -4,18 +4,19 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.hardware.SensorEventListener;
 
-import java.util.TimeZone;
+import java.util.Calendar;
 
 /**
  * 计步功能的基类，主要用于统一不同api版本的规范
  */
 public abstract class IPedometer implements SensorEventListener {
-    private static final int OFFSET = (1000 * 3600 * 24);
     protected SharedPreferences mSpUtil;
     private static final String EVERY_NOW_COUNTER_KEY = "NowCounterKey";
     public static final String EVERY_NATIVE_KEY = "NativeKey";
     public static final int MAX_STEP = 100000;          //每天最大值
     private long mLastTime;
+    private Calendar calendar;
+
 
     public IPedometer(Context context) {
         mSpUtil = context.getSharedPreferences("step", Context.MODE_PRIVATE);
@@ -59,9 +60,17 @@ public abstract class IPedometer implements SensorEventListener {
 
 
     private long getTodayTime() {
+        if (calendar == null) {
+            calendar = Calendar.getInstance();
+        }
         long current = System.currentTimeMillis();
-        long result = current / OFFSET * OFFSET - TimeZone.getDefault().getRawOffset();
+        calendar.setTimeInMillis(current);
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
 
+        long result = calendar.getTimeInMillis();
         if (result != mLastTime) {
             onDateChange();
         }
