@@ -39,6 +39,7 @@ class PedometerAPI19 extends IPedometer {
     private int mDetector;
     private int mLastAdd;        //上一次增加的值
     private boolean sensorReset; //传感器是否重置
+    private long lastTime;
 
     /**
      * 是否为第一次获取到步数，
@@ -98,8 +99,10 @@ class PedometerAPI19 extends IPedometer {
                 mCounter = -1;
             }
 
+            long current = System.currentTimeMillis();
             //去重复
-            if (mCounter != temp) {
+            if (mCounter != temp && current - lastTime >= 1000) {
+                lastTime = current;
                 mCounter = temp;
                 if (!hasTodayNum()) {
                     /*是否为第一次获取到步数，
